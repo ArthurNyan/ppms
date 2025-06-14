@@ -5,7 +5,7 @@ PYTHON=python3.11
 
 # Очистка старых окружений
 echo "[INFO] Удаляю старые окружения и логи..."
-rm -rf venv_pip venv_poetry venv_uv logs
+rm -rf venv_pip venv_poetry venv_uv venv_pipenv logs Pipfile Pipfile.lock
 mkdir -p logs
 
 echo "[STEP] pip: создаю окружение и обновляю pip"
@@ -57,10 +57,38 @@ else
 fi
 deactivate
 
+echo "[STEP] pipenv: создаю окружение и устанавливаю зависимости"
+if command -v pipenv > /dev/null; then
+  pipenv --rm > /dev/null 2>&1 || true
+  START=$(date +%s)
+  pipenv install -r requirements.txt > logs/pipenv_install.log 2>&1 && echo "[OK] pipenv: зависимости установлены" || echo "[ERROR] pipenv install error" > logs/pipenv_error.log
+  END=$(date +%s)
+  PIPENV_TIME=$((END-START))
+  echo "[DONE] pipenv: установка завершена за $PIPENV_TIME сек."
+else
+  echo "[ERROR] pipenv не установлен" > logs/pipenv_error.log
+  PIPENV_TIME=-1
+fi
+
+echo "[STEP] pyenv: проверяю наличие pyenv и доступных версий Python"
+if command -v pyenv > /dev/null; then
+  echo "[INFO] pyenv найден. Доступные версии Python:"
+  pyenv versions | tee logs/pyenv_versions.log
+  # Пример автоматизации: цикл по версиям (раскомментировать и доработать при необходимости)
+  # for PYV in 3.10.14 3.11.9; do
+  #   pyenv local $PYV
+  #   ... (запускать тесты для каждой версии)
+  # done
+else
+  echo "[INFO] pyenv не установлен, тестирование по версиям Python пропущено." | tee logs/pyenv_versions.log
+fi
+
 echo "[RESULT] ==== Итоги ====" | tee logs/result.log
 echo "pip: $PIP_TIME сек" | tee -a logs/result.log
 echo "poetry: $POETRY_TIME сек" | tee -a logs/result.log
 echo "uv: $UV_TIME сек" | tee -a logs/result.log
+echo "pipenv: $PIPENV_TIME сек" | tee -a logs/result.log
 if [ -f logs/pip_error.log ]; then cat logs/pip_error.log | tee -a logs/result.log; fi
 if [ -f logs/poetry_error.log ]; then cat logs/poetry_error.log | tee -a logs/result.log; fi
 if [ -f logs/uv_error.log ]; then cat logs/uv_error.log | tee -a logs/result.log; fi
+if [ -f logs/pipenv_error.log ]; then cat logs/pipenv_error.log | tee -a logs/result.log; fi
