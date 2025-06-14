@@ -1,0 +1,15 @@
+numpy
+pandas
+matplotlib
+flask
+requests
+scikit-learn
+sqlalchemy
+jupyter
+seaborn
+tqdm
+pillow
+lxml
+beautifulsoup4
+pytest
+pydantic 

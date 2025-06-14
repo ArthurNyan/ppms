@@ -1,0 +1,7 @@
+/venv_pip 
+/venv_poetry 
+/venv_uv
+/logs
+poetry.lock
+*.log
+pyproject.toml
